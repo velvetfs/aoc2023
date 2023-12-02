@@ -1,5 +1,7 @@
 module Main where
-import           Data.Maybe (fromMaybe)
+import           Data.List       (tails)
+import           Data.Maybe      (fromMaybe)
+import           Text.Regex.PCRE
 
 main :: IO ()
 main = do
@@ -16,11 +18,34 @@ part1 = do
 
 part2 :: IO ()
 part2 = do
-  content <- readFile "in/ex2.in"
-  let ls = lines content
-  let firstAndLastNums = map concatFirstAndLast' ls
-  let result = sum firstAndLastNums :: Int
+  content <- readFile "in/1.in"
+  let ls = lines content :: [String]
+  let parsedNums = map regexParseNumbers ls
+  let stringNums = map parseLine parsedNums
+  let result = sum (map read stringNums) :: Int
   print result
+
+
+regexParseNumbers :: String -> [String]
+regexParseNumbers s = concatMap (getAllTextMatches . (=~ pattern)) (tails s)
+  where pattern = "([0-9])|(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)"
+
+parseLine :: [String] -> String
+parseLine []     = []
+parseLine [x]    = x ++ x
+parseLine (x:xs) = parseWordOrInt x ++ parseWordOrInt (last xs)
+
+parseWordOrInt :: String -> String
+parseWordOrInt "one"   = "1"
+parseWordOrInt "two"   = "2"
+parseWordOrInt "three" = "3"
+parseWordOrInt "four"  = "4"
+parseWordOrInt "five"  = "5"
+parseWordOrInt "six"   = "6"
+parseWordOrInt "seven" = "7"
+parseWordOrInt "eight" = "8"
+parseWordOrInt "nine"  = "9"
+parseWordOrInt s       = s
 
 parseMaybeInt :: Char -> Maybe Int
 parseMaybeInt s = case reads [s] of
