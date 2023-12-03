@@ -1,28 +1,70 @@
 module Main where
 
-
-main :: IO ()
-main = do
-  content <- readFile "in/1.in"
-  let ls = lines content
-  let illegalGames = map createGameData ls
-  let result = foldl (\acc x -> acc + indexIfIllegal x) 0 illegalGames
-  print result
+import           Data.Maybe (fromMaybe)
 
 data Game = Game
-  { index :: Int,
-    red   :: Int,
-    green :: Int,
-    blue  :: Int
+  { red   :: Int
+  , green :: Int
+  , blue  :: Int
   }
   deriving (Show)
 
-indexIfIllegal :: (Int, String) -> Int
-indexIfIllegal (i, "[]") = i
-indexIfIllegal (_, _)    = 0
+main :: IO ()
+main = do
+  part1
+  part2
 
-createGameData :: String -> (Int, String)
-createGameData ln = (read $ gameIndex, show $ illegalGames)
+part1 :: IO ()
+part1 = do
+  content <- readFile "in/1.in"
+  let ls = lines content
+  let gameData = map createGameData ls
+  let illegalGames = filter (not . anyGameIsIllegal . snd) gameData
+  let result = foldl (\acc x -> acc + fst x) 0 illegalGames
+  print result
+
+part2 :: IO ()
+part2 = do
+  content <- readFile "in/1.in"
+  let ls = lines content
+  let gameData = map createGameData ls
+  let maxColors = map maxOfEachColor $ map snd gameData
+  let result = sum (map gamePowers maxColors)
+  print result
+
+gamePowers :: (Int, Int, Int) -> Int
+gamePowers (r, g, b) = r * g * b
+
+maxOfEachColor :: [Game] -> (Int, Int, Int)
+maxOfEachColor games = (maxRed, maxGreen, maxBlue)
+  where
+    maxRed = maxRedFromGameArray games
+    maxGreen = maxGreenFromGameArray games
+    maxBlue = maxBlueFromGameArray games
+
+maxColorFromGameArray :: (Game -> Int) -> [Game] -> Int
+maxColorFromGameArray _ []       = 0
+maxColorFromGameArray f (x : xs) = max (f x) (maxColorFromGameArray f xs)
+
+maxRedFromGameArray :: [Game] -> Int
+maxRedFromGameArray = maxColorFromGameArray red
+
+maxGreenFromGameArray :: [Game] -> Int
+maxGreenFromGameArray = maxColorFromGameArray green
+
+maxBlueFromGameArray :: [Game] -> Int
+maxBlueFromGameArray = maxColorFromGameArray blue
+
+gameFromTupleArray :: [(String, Int)] -> Game
+gameFromTupleArray [] = Game 0 0 0
+gameFromTupleArray xs = Game r g b
+  where
+    r = fromMaybe 0 $ lookup "red" xs
+    g = fromMaybe 0 $ lookup "green" xs
+    b = fromMaybe 0 $ lookup "blue" xs
+
+createGameData :: String -> (Int, [Game])
+createGameData ln = (read $ gameIndex, games)
   where
     (gamePrelude, rest) = break (':'==) ln
     gameIndex = drop 5 gamePrelude
@@ -30,7 +72,7 @@ createGameData ln = (read $ gameIndex, show $ illegalGames)
     s = splitSubGames subGames
     ss = map subSubGames s
     plies = map (map splitPly) ss
-    illegalGames = filter (any plyIsIllegal) plies
+    games = map gameFromTupleArray plies
 
 splitSubGames :: String -> [String]
 splitSubGames [] = []
@@ -48,32 +90,14 @@ subSubGames ln
   where
     (subSubGame, rest) = break (','==) ln
 
-splitPly :: String -> (Int, String)
-splitPly ln = (read $ ply, drop 1 rest)
+splitPly :: String -> (String, Int)
+splitPly ln = (drop 1 rest, read $ ply)
   where
     (ply, rest) = break (' '==) ln
 
-plyIsIllegal :: (Int, String) -> Bool
-plyIsIllegal (c, color) = c > maxColor color
+gameIsIllegal :: Game -> Bool
+gameIsIllegal (Game r g b) = r > 12 || g > 13 || b > 14
 
-getGameIndex :: String -> String
-getGameIndex = drop 5 . takeWhile (/= ':')
-
-getNextColor :: String -> String
-getNextColor = takeWhile (/= ';')
-
-isNumber :: Char -> Bool
-isNumber c = c `elem` ['0' .. '9']
-
-isJust :: Maybe a -> Bool
-isJust (Just _) = True
-isJust Nothing  = False
-
-isColor :: String -> Bool
-isColor c = c `elem` ["red", "green", "blue"]
-
-maxColor :: String -> Int
-maxColor "red"   = 12
-maxColor "green" = 13
-maxColor "blue"  = 14
-maxColor _       = error "Invalid color"
+anyGameIsIllegal :: [Game] -> Bool
+anyGameIsIllegal []       = False
+anyGameIsIllegal (x : xs) = gameIsIllegal x || anyGameIsIllegal xs
