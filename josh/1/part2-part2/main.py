@@ -1,5 +1,3 @@
-
-
 def main():
     word_to_num = {
         "one": 1,
