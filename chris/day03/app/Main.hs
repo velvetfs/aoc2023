@@ -20,14 +20,30 @@ main = do
 
 part1 :: IO ()
 part1 = do
-  content <- readFile "in/ex1.in"
+  content <- readFile "in/1.in"
   let ls = lines content
   let zippedLines = enumerate (map enumerate ls)
   let filtered = map (\(r, row) -> (r, filterOutNonNumbers row)) zippedLines
   let grouped = map (\(r, row) -> (r, foldl groupEnumeratedNums [] row)) filtered
   let enginePartArray = map (\(r, row) -> map (enginePartFromGroupedNums r) row) grouped
   let symbolCoords = map coordsOfSymbols zippedLines
-  print symbolCoords
+  let result = sum (brokenEnginePartNumbers (concat symbolCoords) (concat enginePartArray))
+  print result
+
+brokenEnginePartNumbers :: [Coord] -> [EnginePart] -> [Int]
+brokenEnginePartNumbers [] _ = []
+brokenEnginePartNumbers c p  = map number (filter (enginePartIsBroken c) p)
+
+enginePartIsBroken :: [Coord] -> EnginePart -> Bool
+enginePartIsBroken [] _ = False
+enginePartIsBroken c p  = any (coordBreaksPart p) c
+
+coordBreaksPart :: EnginePart -> Coord -> Bool
+coordBreaksPart p c = (_x c) `elem` xRange && (_y c) `elem` yRange
+  where
+    xRange = [((startColIndex p) - 1)..((endColIndex p) + 1)]
+    r = rowIndex p
+    yRange = [(r - 1), r, (r + 1)]
 
 enginePartFromGroupedNums :: Int -> [(Int, Char)] -> EnginePart
 enginePartFromGroupedNums r [] = EnginePart r (-1) (-1) (-1)
