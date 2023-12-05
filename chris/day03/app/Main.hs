@@ -16,7 +16,7 @@ data Coord =
 
 main :: IO ()
 main = do
-  part1
+  part2
 
 part1 :: IO ()
 part1 = do
@@ -25,10 +25,38 @@ part1 = do
   let zippedLines = enumerate (map enumerate ls)
   let filtered = map (\(r, row) -> (r, filterOutNonNumbers row)) zippedLines
   let grouped = map (\(r, row) -> (r, foldl groupEnumeratedNums [] row)) filtered
-  let enginePartArray = map (\(r, row) -> map (enginePartFromGroupedNums r) row) grouped
-  let symbolCoords = map coordsOfSymbols zippedLines
-  let result = sum (brokenEnginePartNumbers (concat symbolCoords) (concat enginePartArray))
+  let enginePartArray = concatMap (\(r, row) -> map (enginePartFromGroupedNums r) row) grouped
+  let symbolCoords = concatMap coordsOfSymbols zippedLines
+  let result = sum (brokenEnginePartNumbers symbolCoords enginePartArray)
   print result
+
+part2 :: IO ()
+part2 = do
+  content <- readFile "in/1.in"
+  let ls = lines content
+  let zippedLines = enumerate (map enumerate ls)
+  let filtered = map (\(r, row) -> (r, filterOutNonNumbers row)) zippedLines
+  let grouped = map (\(r, row) -> (r, foldl groupEnumeratedNums [] row)) filtered
+  let enginePartArray = concatMap (\(r, row) -> map (enginePartFromGroupedNums r) row) grouped
+  let gearCoords = concatMap coordsOfGears zippedLines
+  let gearRatios = gearRatiosFromCoords gearCoords enginePartArray
+  let result = sum gearRatios
+  print result
+
+gearRatiosFromCoords :: [Coord] -> [EnginePart] -> [Int]
+gearRatiosFromCoords [] _         = []
+gearRatiosFromCoords coords parts = map (\c -> multiplyTuple (gearRatio parts c)) coords
+
+multiplyTuple :: (Int, Int) -> Int
+multiplyTuple (a, b) = a * b
+
+gearRatio :: [EnginePart] -> Coord -> (Int, Int)
+gearRatio [] _ = (0, 0)
+gearRatio parts coord
+  | length numbers /= 2 = (0, 0)
+  | otherwise = (head numbers, last numbers)
+  where
+    numbers = map number (filter (\p -> coordAdjacentToPart p coord) parts)
 
 brokenEnginePartNumbers :: [Coord] -> [EnginePart] -> [Int]
 brokenEnginePartNumbers [] _ = []
@@ -36,10 +64,10 @@ brokenEnginePartNumbers c p  = map number (filter (enginePartIsBroken c) p)
 
 enginePartIsBroken :: [Coord] -> EnginePart -> Bool
 enginePartIsBroken [] _ = False
-enginePartIsBroken c p  = any (coordBreaksPart p) c
+enginePartIsBroken c p  = any (coordAdjacentToPart p) c
 
-coordBreaksPart :: EnginePart -> Coord -> Bool
-coordBreaksPart p c = (_x c) `elem` xRange && (_y c) `elem` yRange
+coordAdjacentToPart :: EnginePart -> Coord -> Bool
+coordAdjacentToPart p c = (_x c) `elem` xRange && (_y c) `elem` yRange
   where
     xRange = [((startColIndex p) - 1)..((endColIndex p) + 1)]
     r = rowIndex p
@@ -77,6 +105,9 @@ isSymbol = not . notSymbol
 
 notSymbol :: Char -> Bool
 notSymbol c = elem c nonSymbols
+
+coordsOfGears :: (Int, [(Int, Char)]) -> [Coord]
+coordsOfGears (y, xs) = map (\(x, _) -> Coord x y) (filter (\(_, c) -> c == '*') xs)
 
 coordsOfSymbols :: (Int, [(Int, Char)]) -> [Coord]
 coordsOfSymbols (y, xs) = map (\(x, _) -> Coord x y) (filter (\(_, c) -> isSymbol c) xs)
