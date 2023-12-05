@@ -47,14 +47,14 @@ gearRatiosFromCoords :: [Coord] -> [EnginePart] -> [Int]
 gearRatiosFromCoords [] _         = []
 gearRatiosFromCoords coords parts = map (\c -> multiplyTuple (gearRatio parts c)) coords
 
-multiplyTuple :: (Int, Int) -> Int
-multiplyTuple (a, b) = a * b
+multiplyTuple :: Maybe (Int, Int) -> Int
+multiplyTuple Nothing       = 0
+multiplyTuple (Just (a, b)) = a * b
 
-gearRatio :: [EnginePart] -> Coord -> (Int, Int)
-gearRatio [] _ = (0, 0)
+gearRatio :: [EnginePart] -> Coord -> Maybe (Int, Int)
 gearRatio parts coord
-  | length numbers /= 2 = (0, 0)
-  | otherwise = (head numbers, last numbers)
+  | length numbers /= 2 = Nothing
+  | otherwise = Just (head numbers, last numbers)
   where
     numbers = map number (filter (\p -> coordAdjacentToPart p coord) parts)
 
@@ -106,8 +106,11 @@ isSymbol = not . notSymbol
 notSymbol :: Char -> Bool
 notSymbol c = elem c nonSymbols
 
+coordsOf :: (Char -> Bool) -> (Int, [(Int, Char)]) -> [Coord]
+coordsOf p (y, xs) = map (\(x, _) -> Coord x y) (filter (\(_, c) -> p c) xs)
+
 coordsOfGears :: (Int, [(Int, Char)]) -> [Coord]
-coordsOfGears (y, xs) = map (\(x, _) -> Coord x y) (filter (\(_, c) -> c == '*') xs)
+coordsOfGears = coordsOf (== '*')
 
 coordsOfSymbols :: (Int, [(Int, Char)]) -> [Coord]
-coordsOfSymbols (y, xs) = map (\(x, _) -> Coord x y) (filter (\(_, c) -> isSymbol c) xs)
+coordsOfSymbols = coordsOf isSymbol
