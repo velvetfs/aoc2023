@@ -1,6 +1,9 @@
 fn main() {
     part1();
     part2();
+
+    let haha = "haha";
+
 }
 
 fn part1() {

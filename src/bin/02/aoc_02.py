@@ -102,12 +102,13 @@ Game 98: 12 green, 9 blue, 13 red; 6 red, 7 blue; 2 blue, 2 green
 Game 99: 9 red, 3 green, 10 blue; 10 red, 10 blue, 4 green; 2 green, 15 blue, 3 red; 12 blue, 4 red
 Game 100: 15 blue, 6 red; 1 green, 2 red; 12 blue, 8 green, 1 red; 1 red, 7 blue"""
 
-#only 12 red cubes, 13 green cubes, and 14 blue cubes
+# only 12 red cubes, 13 green cubes, and 14 blue cubes
 limits = {
     "red": 12,
     "green": 13,
     "blue": 14
 }
+
 
 def part1():
     possible = []
@@ -122,6 +123,7 @@ def part1():
 
     print(sum(possible))
 
+
 def part2():
     powers = []
     for line in my_str.splitlines():
@@ -132,5 +134,6 @@ def part2():
         powers.append(math.prod(color_maxes.values()))
 
     print(sum(powers))
+
 
 part2()
