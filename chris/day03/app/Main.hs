@@ -10,8 +10,8 @@ data EnginePart =
 
 data Coord =
   Coord
-    { x :: Int
-    , y :: Int
+    { _x :: Int
+    , _y :: Int
     } deriving (Show)
 
 main :: IO ()
@@ -22,31 +22,33 @@ part1 :: IO ()
 part1 = do
   content <- readFile "in/ex1.in"
   let ls = lines content
-  let seq = map numberSequences ls
-  let result = map matrixEnum seq
-  print result
+  let zippedLines = enumerate (map enumerate ls)
+  let filtered = map (\(r, row) -> (r, filterOutNonNumbers row)) zippedLines
+  let grouped = map (\(r, row) -> (r, foldl groupEnumeratedNums [] row)) filtered
+  let enginePartArray = map (\(r, row) -> map (enginePartFromGroupedNums r) row) grouped
+  let symbolCoords = map coordsOfSymbols zippedLines
+  print symbolCoords
+
+enginePartFromGroupedNums :: Int -> [(Int, Char)] -> EnginePart
+enginePartFromGroupedNums r [] = EnginePart r (-1) (-1) (-1)
+enginePartFromGroupedNums r nums = EnginePart n r s e
+  where
+    n = read (concatMap (\(_, c) -> [c]) nums)
+    s = fst (head nums)
+    e = fst (last nums)
 
 enumerate :: [a] -> [(Int, a)]
 enumerate = zip [1..]
 
-matrixEnum :: Int -> [a] -> [(Int, Int, a)]
-matrixEnum i s = map (\x -> addRow (i, x)) s
+groupEnumeratedNums :: [[(Int, Char)]] -> (Int, Char) -> [[(Int, Char)]]
+groupEnumeratedNums [] x  = [[x]]
+groupEnumeratedNums acc x
+  | (fst x) - lastNum > 1 = acc ++ [[x]]
+  | otherwise = (init acc) ++ [last acc ++ [x]]
+  where lastNum = fst (last (last acc))
 
-addRow :: Int -> (Int, a) -> (Int, Int, a)
-addRow i t = (i, fst t, snd t)
-
-numberSequences :: String -> [String]
-numberSequences s
-  | null xs = []
-  | otherwise = x : numberSequences xs
-  where
-    (x, xs) = breakOffNumber s
-
-breakOffNumber :: String -> (String, String)
-breakOffNumber [] = ([], [])
-breakOffNumber (c:cs)
-  | isNotNumber c = ([], cs)
-  | otherwise      = let (prefix, suffix) = breakOffNumber cs in (c : prefix, suffix)
+filterOutNonNumbers :: [(a, Char)] -> [(a, Char)]
+filterOutNonNumbers = filter (not . isNotNumber . snd)
 
 isNotNumber :: Char -> Bool
 isNotNumber c = not (c `elem` ['0'..'9'])
@@ -60,8 +62,5 @@ isSymbol = not . notSymbol
 notSymbol :: Char -> Bool
 notSymbol c = elem c nonSymbols
 
-indicesOfSymbols :: String -> [Int]
-indicesOfSymbols s = map fst filtered
-  where
-    zipped = zip [1..] s
-    filtered = filter (\(_, c) -> isSymbol c) zipped
+coordsOfSymbols :: (Int, [(Int, Char)]) -> [Coord]
+coordsOfSymbols (y, xs) = map (\(x, _) -> Coord x y) (filter (\(_, c) -> isSymbol c) xs)
