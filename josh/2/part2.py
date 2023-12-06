@@ -12,7 +12,6 @@ def main():
             "green": 0,
             "blue": 0,
         }
-        game_number = i+1
         current_num = []
         game = game.split(":")[1]
         for j, c in enumerate(game):
