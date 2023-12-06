@@ -1,5 +1,6 @@
 import functools
 import re
+
 def main():
     with open("part1_input.txt") as f:
         races = f.readlines()
@@ -16,14 +17,6 @@ def main():
                 this_record_count += 1
         solution_count.append(this_record_count)
     print(functools.reduce(lambda x, y: x * y, solution_count))
-
-
-
-
-
-
-
-
 
 if __name__ == "__main__":
     main()
