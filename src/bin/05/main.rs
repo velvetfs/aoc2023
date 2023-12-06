@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::ptr::null;
-
 fn main() {
 
     // part1();
