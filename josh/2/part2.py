@@ -1,15 +1,11 @@
+import functools
+
+
 def main():
     with open("part1_input.txt") as f:
         games = f.readlines()
 
-    maximums = {
-        "red": 12,
-        "green": 13,
-        "blue": 14,
-    }
-
-    valid_games = []
-
+    total = 0
     for i, game in enumerate(games):
         maximums_per_game = {
             "red": 0,
@@ -30,8 +26,7 @@ def main():
                            maximums_per_game[k] = num_integer
                        num_integer = None
                        current_num = []
-        if sum([0 if maximums[key] >= maximums_per_game[key] else 1 for key in maximums.keys()]) == 0:
-             valid_games.append(game_number)
-    print(sum(valid_games))
+        total += functools.reduce(lambda x, y: x * y, maximums_per_game.values())
+    print(total)
 if __name__ == "__main__":
     main()
