@@ -1,5 +1,57 @@
+from math import lcm
+
+
 def main():
-    part2()
+    part2_fast()
+
+
+def part2_fast():
+    my_str = get_my_str()
+
+    mover = {
+        "L": 0,
+        "R": 1
+    }
+    instructions = ""
+    letter_map = {}
+    destinations = []
+
+    for idx, line in enumerate(my_str.split('\n')):
+        if idx == 0:
+            instructions = line.strip()
+        else:
+            if line.strip() == '':
+                continue
+            letter, value = line.split('=')
+            letter = letter.strip()
+            if letter[-1] == "A":
+                destinations.append(letter)
+
+            parsed_values = value.strip().replace('(', '').replace(')', '').replace(',', '').split()
+            if set(parsed_values) == 1:
+                print(parsed_values)
+            value_tuple = tuple([v.strip() for v in parsed_values])
+            letter_map[letter] = value_tuple
+
+    nums = []
+    for destination in destinations:
+        counter = 0
+        while True:
+            if destination[-1] == "Z":
+                nums.append(counter)
+                break
+            idx = counter % len(instructions)
+            destination = letter_map[destination][mover[instructions[idx]]]
+            counter += 1
+
+    def lcm_list(ns):
+        lcm_value = ns[0]
+        for i in ns[1:]:
+            lcm_value = lcm(lcm_value, i)
+        return lcm_value
+
+    print(nums)
+    print(lcm_list(nums))
 
 
 def part2():
